@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lector de Códigos de Barras</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Añadir algún favicon si es necesario -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- Incluir aquí cualquier otra hoja de estilo o fuentes que desees utilizar -->
+</head>
+<body>
+    <div class="container">
+        <h1>Lector de Códigos de Barras</h1>
+        <div class="video-container">
+            <video id="preview" autoplay></video>
+        </div>
+        
+        <button id="startButton">Iniciar Escaneo</button>
+        <div class="resultados">
+            <h2>Resultados Escaneados:</h2>
+            <ul id="scannedResults">
+                <!-- Los resultados escaneados se listarán aquí -->
+            </ul>
+        </div>
+    </div>
+    <!-- Añadir scripts al final del body para una carga más eficiente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
