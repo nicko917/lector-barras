@@ -1,34 +1,44 @@
-# Script principal de Flask
-from flask import Flask, request, jsonify, render_template
+import streamlit as st
 import pandas as pd
-import os
-from werkzeug.middleware.proxy_fix import ProxyFix
+from PIL import Image
+from pyzbar.pyzbar import decode
+import datetime
 
+def leer_codigo_de_barras(image):
+    decoded_objects = decode(image)
+    for obj in decoded_objects:
+        return obj.data.decode("utf-8")  # Decodificar a texto
+    return None
 
-app = Flask(__name__)
+def main():
+    st.title('Lector de Códigos de Barras')
 
-# Configura el ProxyFix para simular una conexión HTTPS en local
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    # Lista para almacenar los códigos de barras y la fecha de escaneo
+    codigos_de_barras = []
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+    # Uso de st.camera_input para capturar la imagen
+    captured_image = st.camera_input("Captura un código de barras usando tu cámara")
 
-@app.route('/upload', methods=['POST'])
-def upload_data():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-    
-    try:
-        df = pd.read_csv(file)
-        # Aquí puedes procesar el DataFrame como necesites
-        # Por ejemplo, guardar en una base de datos o realizar cálculos
-        return jsonify({"message": "Archivo recibido y procesado"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if captured_image is not None:
+        # Procesa la imagen capturada
+        image = Image.open(captured_image)
+        codigo = leer_codigo_de_barras(image)
+        if codigo:
+            codigos_de_barras.append({"Código": codigo, "Fecha": datetime.datetime.now()})
+            st.success(f"Código de Barras Detectado: {codigo}")
+        else:
+            st.error("No se detectó un código de barras válido.")
 
-if __name__ == '__main__':
-    app.run(ssl_context='adhoc', host='0.0.0.0', port=5000, debug=True)
+    # Mostrar los códigos de barras almacenados
+    if codigos_de_barras:
+        st.write("Códigos de Barras Escaneados:")
+        for item in codigos_de_barras:
+            st.write(f"Código: {item['Código']}, Fecha: {item['Fecha']}")
+
+    # Botón para exportar a CSV
+    if st.button("Exportar a CSV"):
+        df = pd.DataFrame(codigos_de_barras)
+        st.download_button(label="Descargar CSV", data=df.to_csv(index=False), file_name="codigos_de_barras.csv", mime="text/csv")
+
+if __name__ == "__main__":
+    main()
