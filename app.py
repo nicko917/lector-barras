@@ -2,7 +2,6 @@
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
 import os
-from flask import Flask, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 
