@@ -1,0 +1,2 @@
+authenticated as anonymous user
+create an account and add your key for a longer lasting domain name. see https://localhost.run/docs/forever-free/ for more information.
