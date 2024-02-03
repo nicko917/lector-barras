@@ -10,15 +10,17 @@ def leer_codigo_de_barras(image):
         return obj.data.decode("utf-8")  # Decodificar a texto
     return None
 
-def actualizar_datos_producto(idx, nombre, descripcion):
-    # Actualiza los datos en el estado de sesión para un producto específico
-    st.session_state['productos'][idx]['Nombre'] = nombre
-    st.session_state['productos'][idx]['Descripción'] = descripcion
+def guardar_datos(idx):
+    # Actualiza el estado para indicar que los datos se han guardado
+    st.session_state['productos'][idx]['editar'] = False
+
+def editar_datos(idx):
+    # Actualiza el estado para indicar que los datos están siendo editados
+    st.session_state['productos'][idx]['editar'] = True
 
 def main():
     st.title('Lector de Códigos de Barras y Entrada de Datos')
 
-    # Inicializar el estado de sesión si no existe
     if 'productos' not in st.session_state:
         st.session_state['productos'] = []
 
@@ -28,22 +30,23 @@ def main():
         image = Image.open(captured_image)
         codigo = leer_codigo_de_barras(image)
         if codigo and not any(prod["SKU"] == codigo for prod in st.session_state['productos']):
-            st.session_state['productos'].append({"SKU": codigo, "Nombre": "", "Descripción": "", "Fecha": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+            st.session_state['productos'].append({"SKU": codigo, "Nombre": "", "Descripción": "", "editar": True})
             st.success(f"Código de Barras Detectado: {codigo}")
         elif codigo:
             st.error("Código de barras duplicado.")
         else:
             st.error("No se detectó un código de barras válido.")
 
-    # Crear campos de entrada para cada producto
     for idx, producto in enumerate(st.session_state['productos']):
         with st.container():
             st.write(f"SKU: {producto['SKU']}")
-            nombre = st.text_input("Nombre", value=producto['Nombre'], key=f"nombre_{idx}")
-            descripcion = st.text_area("Descripción", value=producto['Descripción'], key=f"descripcion_{idx}")
-            actualizar_datos_producto(idx, nombre, descripcion)
+            if producto['editar']:
+                producto['Nombre'] = st.text_input("Nombre", value=producto['Nombre'], key=f"nombre_{idx}")
+                producto['Descripción'] = st.text_area("Descripción", value=producto['Descripción'], key=f"descripcion_{idx}")
+                guardar_button = st.button("Guardar", key=f"guardar_{idx}", on_click=guardar_datos, args=(idx,))
+            else:
+                editar_button = st.button("🖉 Editar", key=f"editar_{idx}", on_click=editar_datos, args=(idx,))
 
-    # Botón para borrar el último producto leído
     if st.button("Borrar Último Producto Leído"):
         if st.session_state['productos']:
             st.session_state['productos'].pop()
@@ -51,10 +54,11 @@ def main():
         else:
             st.error("No hay productos para eliminar.")
 
-    # Botón para exportar a CSV
     if st.button("Exportar a CSV"):
         df = pd.DataFrame(st.session_state['productos'])
         st.download_button(label="Descargar CSV", data=df.to_csv(index=False), mime="text/csv", file_name="productos.csv")
 
 if __name__ == "__main__":
     main()
+
+
